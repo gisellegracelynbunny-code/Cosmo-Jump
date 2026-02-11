@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Giselle's Game 2026</title>
+    <style>
+        :root {
+            --neon-pink: #ff007f;
+            --neon-blue: #00f2ff;
+            --purple-bridge: #9d00ff;
+            --bg-deep: #0a0a12;
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: var(--bg-deep);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #fff;
+        }
+
+        canvas { display: block; }
+
+        .hud {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            z-index: 10;
+        }
+        .score-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--neon-pink);
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            backdrop-filter: blur(5px);
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, rgba(15, 15, 25, 0.9) 0%, rgba(5, 5, 10, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 30px;
+            transition: opacity 0.3s ease;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(to right, var(--neon-pink), var(--purple-bridge), var(--neon-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .btn {
+            margin-top: 30px;
+            padding: 18px 45px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            background: none;
+            border: 2px solid var(--neon-blue);
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+
+        .btn:hover {
+            background: var(--neon-blue);
+            color: var(--bg-deep);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+        }
+
+        .shop-section {
+            width: 100%;
+            max-width: 450px;
+            margin: 25px 0;
+        }
+        .shop-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .item {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+        }
+        .item.locked { opacity: 0.3; cursor: not-allowed; border-color: transparent; }
+        .item.active { border-color: var(--neon-pink); background: rgba(255, 0, 127, 0.1); }
+
+        #finalScore { font-size: 1.4rem; color: #aaa; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="hud">
+        <div class="score-box">COINS: <span id="scoreVal">0</span></div>
+    </div>
+
+    <div id="welcome" class="overlay">
+        <h1>Welcome</h1>
+        <button class="btn" onclick="startGame()">Start mission</button>
+    </div>
+
+    <div id="gameOver" class="overlay" style="display:none;">
+        <h1 style="font-size: 2rem;">System Crash</h1>
+        <p id="finalScore"></p>
+
+        <div class="shop-section">
+            <span class="shop-label">Aura Trails</span>
+            <div id="trailShop" class="grid"></div>
+            
+            <span class="shop-label">Core Themes</span>
+            <div id="themeShop" class="grid"></div>
+        </div>
+
+        <button class="btn" onclick="resetGame()">Reboot</button>
+    </div>
+
+    <canvas id="game"></canvas>
+
+<script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    
+    let state = {
+        active: false,
+        score: 0,
+        difficulty: 4.5,
+        total: Number(localStorage.getItem("g_total_2026")) || 0
+    };
+
+    let player = { 
+        x: 0, y: 0, vy: 0, 
+        w: 32, h: 32, 
+        jumpForce: -13, 
+        gravity: 0.6,
+        canJump: false 
+    };
+
+    let objects = { platforms: [], items: [], particles: [], stars: [] };
+    let activeTheme = localStorage.getItem("g_theme") || "default";
+    let activeTrail = localStorage.getItem("g_trail") || "none";
+
+    const SHOP = {
+        themes: { default: 0, neon: 20, phantom: 50 },
+        trails: { none: 0, pulse: 15, glitch: 40, nitro: 80 }
+    };
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        player.x = canvas.width * 0.15;
+        
+        // Background Stars with depth (z)
+        objects.stars = Array.from({length: 120}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            z: Math.random() * 3 + 1, // Depth factor
+            size: Math.random() * 2
+        }));
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+
+    const triggerJump = (e) => {
+        if (e.type === 'touchstart') e.preventDefault();
+        if (state.active && player.canJump) {
+            player.vy = player.jumpForce;
+            player.canJump = false;
+        }
+    };
+    window.addEventListener("touchstart", triggerJump, {passive: false});
+    window.addEventListener("mousedown", triggerJump);
+    window.addEventListener("keydown", e => { if(e.code === "Space") triggerJump(e); });
+
+    function startGame() {
+        document.getElementById("welcome").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("welcome").style.display = "none";
+            state.active = true;
+            resetGame();
+        }, 300);
+    }
+
+    function resetGame() {
+        state.score = 0;
+        state.difficulty = 5; 
+        state.active = true;
+        player.y = canvas.height / 2;
+        player.vy = 0;
+        
+        // Initial safe platform
+        objects.platforms = [{ x: 0, y: canvas.height - 150, w: canvas.width, h: 20 }];
+        objects.items = [];
+        objects.particles = [];
+        
+        document.getElementById("gameOver").style.display = "none";
+    }
+
+    function update() {
+        if (!state.active) return;
+        state.difficulty += 0.0008; 
+        player.vy += player.gravity;
+        player.y += player.vy;
+        
+        if (player.y > canvas.height + 100) endGame();
+
+        // Parallax Star Movement
+        objects.stars.forEach(s => {
+            s.x -= (state.difficulty * 0.1) * s.z;
+            if (s.x < 0) {
+                s.x = canvas.width;
+                s.y = Math.random() * canvas.height;
+            }
+        });
+
+        // Platform Collision & Movement
+        objects.platforms.forEach(p => {
+            p.x -= state.difficulty;
+            
+            // Refined Collision (Top only)
+            if (player.vy >= 0 && 
+                player.x + player.w/2 > p.x && 
+                player.x - player.w/2 < p.x + p.w &&
+                player.y + player.h/2 >= p.y && 
+                player.y - player.vy + player.h/2 <= p.y + 10) {
+                
+                player.y = p.y - player.h/2;
+                player.vy = 0;
+                player.canJump = true;
+            }
+        });
+
+        // Better Platform Generation (Removes "Impossible" Jumps)
+        if (objects.platforms[objects.platforms.length - 1].x < canvas.width - (150 + state.difficulty * 5)) {
+            let last = objects.platforms[objects.platforms.length - 1];
+            
+            // Limit vertical difference to ensure player can always jump up or reach down
+            let maxDiff = 120; 
+            let newY = last.y + (Math.random() - 0.5) * (maxDiff * 2);
+            
+            // Keep in bounds
+            newY = Math.max(200, Math.min(canvas.height - 100, newY));
+            
+            let newW = Math.max(100, 250 - state.difficulty * 8); 
+            let newX = canvas.width;
+
+            objects.platforms.push({ x: newX, y: newY, w: newW, h: 20 });
+            
+            if (Math.random() > 0.4) {
+                objects.items.push({ x: newX + newW/2, y: newY - 40, collected: false });
+            }
+        }
+        objects.platforms = objects.platforms.filter(p => p.x + p.w > -100);
+
+        // Collectibles
+        objects.items.forEach((it, i) => {
+            it.x -= state.difficulty;
+            if (Math.hypot(player.x - it.x, (player.y) - it.y) < 35) {
+                state.score++;
+                objects.items.splice(i, 1);
+                createExplosion(it.x, it.y, varColor());
+            }
+        });
+
+        // Particles / Trails
+        if (activeTrail !== "none" && Math.random() > 0.3) {
+            objects.particles.push({
+                x: player.x - 10, y: player.y,
+                vx: -1, vy: (Math.random() - 0.5),
+                life: 1, color: varColor()
+            });
+        }
+        objects.particles.forEach((p, i) => {
+            p.life -= 0.03; p.x += p.vx; p.y += p.vy;
+            if (p.life <= 0) objects.particles.splice(i, 1);
+        });
+
+        document.getElementById("scoreVal").innerText = state.score;
+    }
+
+    function createExplosion(x, y, color) {
+        for(let i=0; i<10; i++) {
+            objects.particles.push({
+                x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12,
+                life: 1, color
+            });
+        }
+    }
+
+    function varColor() {
+        if (activeTrail === 'pulse') return '#00f2ff';
+        if (activeTrail === 'glitch') return Math.random() > 0.5 ? '#ff007f' : '#00f2ff';
+        if (activeTrail === 'nitro') return '#00ff88'; 
+        return '#ffffff';
+    }
+
+    function draw() {
+        ctx.fillStyle = '#0a0a12';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Stars
+        objects.stars.forEach(s => {
+            ctx.fillStyle = `rgba(255, 255, 255, ${s.z / 4})`;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // Platforms
+        objects.platforms.forEach(p => {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#00f2ff';
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.strokeStyle = '#00f2ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(p.x, p.y, p.w, p.h);
+        });
+        
+        ctx.shadowBlur = 0;
+
+        // Items
+        objects.items.forEach(it => {
+            ctx.fillStyle = '#ff007f';
+            ctx.beginPath();
+            ctx.arc(it.x, it.y, 8, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 0, 127, 0.4)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(it.x, it.y, 14, 0, Math.PI*2);
+            ctx.stroke();
+        });
+
+        // Particles
+        objects.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, 3, 3);
+        });
+        ctx.globalAlpha = 1;
+
+        // Player
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.vy * 0.04);
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = varColor();
+        ctx.fillStyle = activeTheme === 'neon' ? '#00f2ff' : activeTheme === 'phantom' ? '#333' : '#fff';
+        ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h);
+        
+        // Eyes
+        ctx.fillStyle = '#000';
+        ctx.fillRect(4, -8, 6, 6);
+        ctx.fillRect(14, -8, 6, 6);
+        ctx.restore();
+    }
+
+    function endGame() {
+        state.active = false;
+        state.total += state.score;
+        localStorage.setItem("g_total_2026", state.total);
+        document.getElementById("finalScore").innerText = `EARNED: ${state.score} | BALANCE: ${state.total}`;
+        buildShop();
+        document.getElementById("gameOver").style.display = "flex";
+    }
+
+    function buildShop() {
+        const createGrid = (type, containerId) => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            Object.entries(SHOP[type]).forEach(([name, cost]) => {
+                const isLocked = state.total < cost;
+                const isActive = (type === 'themes' ? activeTheme : activeTrail) === name;
+                const div = document.createElement("div");
+                div.className = `item ${isLocked ? 'locked' : ''} ${isActive ? 'active' : ''}`;
+                div.innerHTML = `${name}<br><span style="font-size:10px">${isLocked ? '🔒 '+cost : 'USE'}</span>`;
+                if (!isLocked) div.onclick = () => {
+                    if(type === 'themes') { activeTheme = name; localStorage.setItem("g_theme", name); }
+                    else { activeTrail = name; localStorage.setItem("g_trail", name); }
+                    buildShop();
+                };
+                container.appendChild(div);
+            });
+        };
+        createGrid('trails', 'trailShop');
+        createGrid('themes', 'themeShop');
+    }
+
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+    loop();
+</script>
+</body>
+</html>
