@@ -1,0 +1,120 @@
+:root {
+    --neon-pink: #ff007f;
+    --neon-blue: #00f2ff;
+    --purple-bridge: #9d00ff;
+    --bg-deep: #0a0a12;
+}
+
+* {
+    box-sizing: border-box;
+    touch-action: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: var(--bg-deep);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff;
+}
+
+canvas { display: block; }
+
+.hud {
+    position: absolute;
+    top: 40px;
+    left: 20px;
+    z-index: 10;
+}
+.score-box {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 20px;
+    border-radius: 12px;
+    border-left: 4px solid var(--neon-pink);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    backdrop-filter: blur(5px);
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(15, 15, 25, 0.9) 0%, rgba(5, 5, 10, 0.95) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    padding: 30px;
+    transition: opacity 0.3s ease;
+}
+
+h1 {
+    font-size: 3rem;
+    margin: 0;
+    background: linear-gradient(to right, var(--neon-pink), var(--purple-bridge), var(--neon-blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.btn {
+    margin-top: 30px;
+    padding: 18px 45px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: white;
+    background: none;
+    border: 2px solid var(--neon-blue);
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+}
+
+.btn:hover {
+    background: var(--neon-blue);
+    color: var(--bg-deep);
+    box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
+}
+
+.shop-section {
+    width: 100%;
+    max-width: 450px;
+    margin: 25px 0;
+}
+.shop-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 10px;
+    display: block;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    text-align: center;
+    cursor: pointer;
+}
+.item.locked { opacity: 0.3; cursor: not-allowed; border-color: transparent; }
+.item.active { border-color: var(--neon-pink); background: rgba(255, 0, 127, 0.1); }
+
+#finalScore { font-size: 1.4rem; color: #aaa; margin: 10px 0; }
