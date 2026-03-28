@@ -3,28 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Giselle's Game 2026</title>
+    <title>Cosmo Jump — Space Runner 2026</title>
+    <meta name="description" content="Cosmo Jump: A 2D endless runner set in space. Collect coins, unlock trails and themes, and compete with friends!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="hud">
+    <!-- ═══════════════ HUD ═══════════════ -->
+    <div class="hud" id="hud">
         <div class="score-box">COINS: <span id="scoreVal">0</span></div>
+        <button id="pauseBtn" class="pause-btn" onclick="togglePause()" aria-label="Pause game">❚❚</button>
     </div>
 
+    <!-- ═══════════════ WELCOME SCREEN ═══════════════ -->
     <div id="welcome" class="overlay">
-        <h1>Welcome</h1>
-        <button class="btn" onclick="startGame()">Start mission</button>
+        <h1>Cosmo Jump</h1>
+        <p class="tagline">Endless runner among the stars ✦</p>
+
+        <div class="username-section">
+            <div class="input-wrapper">
+                <span class="input-icon">👤</span>
+                <input type="text" id="usernameInput" placeholder="Enter your username" maxlength="20" autocomplete="off" spellcheck="false">
+            </div>
+            <span id="loginStatus" class="login-status"></span>
+        </div>
+
+        <button class="btn" id="startBtn" onclick="startGame()" disabled>Start Mission</button>
     </div>
 
+    <!-- ═══════════════ PAUSE OVERLAY ═══════════════ -->
+    <div id="pauseOverlay" class="overlay" style="display:none;">
+        <h1>Paused</h1>
+        <button class="btn" onclick="togglePause()">Resume</button>
+    </div>
+
+    <!-- ═══════════════ GAME OVER SCREEN ═══════════════ -->
     <div id="gameOver" class="overlay" style="display:none;">
-        <h1 style="font-size: 2rem;">System Crash</h1>
-        <p id="finalScore"></p>
+        <h1 class="gameover-title">System Crash</h1>
+
+        <div class="currency-display">
+            <div class="currency-card earned">
+                <span class="currency-icon">✦</span>
+                <div class="currency-info">
+                    <span class="currency-label">EARNED</span>
+                    <span id="earnedVal" class="currency-value">0</span>
+                </div>
+            </div>
+            <div class="currency-card balance">
+                <span class="currency-icon">◈</span>
+                <div class="currency-info">
+                    <span class="currency-label">BALANCE</span>
+                    <span id="balanceVal" class="currency-value">0</span>
+                </div>
+            </div>
+        </div>
 
         <div class="shop-section">
             <span class="shop-label">Aura Trails</span>
             <div id="trailShop" class="grid"></div>
-            
+
             <span class="shop-label">Core Themes</span>
             <div id="themeShop" class="grid"></div>
         </div>
@@ -32,6 +71,7 @@
         <button class="btn" onclick="resetGame()">Reboot</button>
     </div>
 
+    <!-- ═══════════════ CANVAS ═══════════════ -->
     <canvas id="game"></canvas>
 
     <script src="script.js"></script>

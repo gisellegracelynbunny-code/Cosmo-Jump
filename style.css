@@ -1,13 +1,19 @@
+/* ═══════════════════════════════════════════════════
+   COSMO JUMP — STYLESHEET
+   ═══════════════════════════════════════════════════ */
+
 :root {
     --neon-pink: #ff007f;
     --neon-blue: #00f2ff;
     --purple-bridge: #9d00ff;
     --bg-deep: #0a0a12;
+    --gold: #ffd700;
+    --gold-glow: rgba(255, 215, 0, 0.35);
 }
 
+/* ── Base Reset ── */
 * {
     box-sizing: border-box;
-    touch-action: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
@@ -21,13 +27,23 @@ body {
     color: #fff;
 }
 
-canvas { display: block; }
+/* Only block touch defaults on the canvas (not buttons/overlays) */
+canvas {
+    display: block;
+    touch-action: none;
+}
 
+/* ── HUD ── */
 .hud {
     position: absolute;
     top: 40px;
     left: 20px;
+    right: 20px;
     z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
 }
 .score-box {
     background: rgba(255, 255, 255, 0.05);
@@ -38,8 +54,33 @@ canvas { display: block; }
     font-weight: 800;
     letter-spacing: 1px;
     backdrop-filter: blur(5px);
+    pointer-events: auto;
 }
 
+.pause-btn {
+    margin-left: auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(5px);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+.pause-btn:hover {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+}
+
+/* ── Overlays (shared) ── */
 .overlay {
     position: absolute;
     inset: 0;
@@ -51,6 +92,8 @@ canvas { display: block; }
     z-index: 20;
     padding: 30px;
     transition: opacity 0.3s ease;
+    overflow-y: auto;
+    touch-action: manipulation;
 }
 
 h1 {
@@ -64,9 +107,20 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 4px;
 }
+.gameover-title {
+    font-size: 2rem;
+}
 
+.tagline {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 8px 0 24px;
+    letter-spacing: 1px;
+}
+
+/* ── Buttons ── */
 .btn {
-    margin-top: 30px;
+    margin-top: 20px;
     padding: 18px 45px;
     font-size: 1.1rem;
     font-weight: bold;
@@ -79,18 +133,142 @@ h1 {
     letter-spacing: 2px;
     transition: all 0.2s ease;
     box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+    touch-action: manipulation;
 }
-
 .btn:hover {
     background: var(--neon-blue);
     color: var(--bg-deep);
     box-shadow: 0 0 30px rgba(0, 242, 255, 0.5);
 }
+.btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    box-shadow: none;
+}
 
+/* ── Username Input ── */
+.username-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 320px;
+}
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.input-wrapper:focus-within {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+}
+.input-icon {
+    font-size: 1.1rem;
+    opacity: 0.5;
+}
+#usernameInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    touch-action: manipulation;
+}
+#usernameInput::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 400;
+}
+.login-status {
+    font-size: 0.75rem;
+    height: 18px;
+    letter-spacing: 0.5px;
+    transition: color 0.2s ease;
+}
+.login-status.loading { color: var(--neon-blue); }
+.login-status.success { color: #00ff88; }
+.login-status.error   { color: var(--neon-pink); }
+
+/* ── Currency Display (Game Over) ── */
+.currency-display {
+    display: flex;
+    gap: 16px;
+    margin: 20px 0 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.currency-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 22px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(5px);
+    min-width: 150px;
+}
+.currency-card.earned {
+    border-color: rgba(255, 215, 0, 0.25);
+    background: rgba(255, 215, 0, 0.05);
+}
+.currency-card.balance {
+    border-color: rgba(0, 242, 255, 0.2);
+    background: rgba(0, 242, 255, 0.04);
+}
+.currency-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+}
+.currency-card.earned .currency-icon {
+    color: var(--gold);
+    text-shadow: 0 0 12px var(--gold-glow);
+}
+.currency-card.balance .currency-icon {
+    color: var(--neon-blue);
+    text-shadow: 0 0 12px rgba(0, 242, 255, 0.35);
+}
+.currency-info {
+    display: flex;
+    flex-direction: column;
+}
+.currency-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #666;
+    font-weight: 600;
+}
+.currency-value {
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+.currency-card.earned .currency-value {
+    color: var(--gold);
+    text-shadow: 0 0 8px var(--gold-glow);
+}
+.currency-card.balance .currency-value {
+    color: var(--neon-blue);
+    text-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+}
+
+/* ── Shop ── */
 .shop-section {
     width: 100%;
     max-width: 450px;
-    margin: 25px 0;
+    margin: 20px 0;
 }
 .shop-label {
     font-size: 0.8rem;
@@ -98,6 +276,7 @@ h1 {
     color: #666;
     margin-bottom: 10px;
     display: block;
+    letter-spacing: 1px;
 }
 .grid {
     display: grid;
@@ -106,15 +285,104 @@ h1 {
     margin-bottom: 20px;
 }
 .item {
-    padding: 12px;
+    padding: 14px 12px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
     text-align: center;
     cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: capitalize;
 }
-.item.locked { opacity: 0.3; cursor: not-allowed; border-color: transparent; }
-.item.active { border-color: var(--neon-pink); background: rgba(255, 0, 127, 0.1); }
+.item:hover:not(.locked) {
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.item .item-cost {
+    display: block;
+    font-size: 0.65rem;
+    margin-top: 4px;
+    color: #888;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+.item.locked {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: transparent;
+}
+.item.active {
+    border-color: var(--neon-pink);
+    background: rgba(255, 0, 127, 0.1);
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.15);
+}
 
-#finalScore { font-size: 1.4rem; color: #aaa; margin: 10px 0; }
+/* ── Mobile Responsive ── */
+@media (max-width: 600px) {
+    .hud {
+        top: env(safe-area-inset-top, 20px);
+        left: 12px;
+        right: 12px;
+    }
+    .score-box {
+        font-size: 16px;
+        padding: 8px 14px;
+    }
+    .pause-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 12px;
+    }
+
+    h1 {
+        font-size: 2rem;
+        letter-spacing: 2px;
+    }
+    .gameover-title {
+        font-size: 1.5rem;
+    }
+    .tagline {
+        font-size: 0.8rem;
+    }
+
+    .overlay {
+        padding: 20px 16px;
+    }
+
+    .btn {
+        padding: 14px 32px;
+        font-size: 0.95rem;
+    }
+
+    .currency-display {
+        gap: 10px;
+    }
+    .currency-card {
+        padding: 10px 16px;
+        min-width: 130px;
+    }
+    .currency-icon { font-size: 1.4rem; }
+    .currency-value { font-size: 1.3rem; }
+
+    .shop-section {
+        max-width: 100%;
+    }
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .item {
+        padding: 10px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 380px) {
+    h1 { font-size: 1.6rem; }
+    .currency-card { min-width: 110px; padding: 8px 12px; }
+    .currency-value { font-size: 1.1rem; }
+    .grid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "cosmo-jump",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cosmo Jump — 2D endless runner canvas game",
+  "dependencies": {
+    "@upstash/redis": "^1.37.0"
+  }
+}
