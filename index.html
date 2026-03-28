@@ -13,7 +13,10 @@
 
     <!-- ═══════════════ HUD ═══════════════ -->
     <div class="hud" id="hud">
-        <div class="score-box">COINS: <span id="scoreVal">0</span></div>
+        <div class="hud-stats">
+            <div class="score-box">🪙 <span id="scoreVal">0</span></div>
+            <div class="score-box points-box">⚡ <span id="pointsVal">0</span></div>
+        </div>
         <button id="pauseBtn" class="pause-btn" onclick="togglePause()" aria-label="Pause game">❚❚</button>
     </div>
 
@@ -30,24 +33,42 @@
             <span id="loginStatus" class="login-status"></span>
         </div>
 
-        <button class="btn" id="startBtn" onclick="startGame()" disabled>Start Mission</button>
+        <!-- Mini leaderboard on welcome screen -->
+        <div id="welcomeLeaderboard" class="leaderboard-section mini" style="display:none;">
+            <span class="leaderboard-title">🏆 Top Players</span>
+            <div id="welcomeLbList" class="leaderboard-list"></div>
+        </div>
+
+        <button class="btn" id="startBtn" onclick="startGame()">Start Mission</button>
     </div>
 
     <!-- ═══════════════ PAUSE OVERLAY ═══════════════ -->
     <div id="pauseOverlay" class="overlay" style="display:none;">
         <h1>Paused</h1>
-        <button class="btn" onclick="togglePause()">Resume</button>
+        <button class="btn btn-ready" onclick="togglePause()">Resume</button>
     </div>
 
     <!-- ═══════════════ GAME OVER SCREEN ═══════════════ -->
     <div id="gameOver" class="overlay" style="display:none;">
         <h1 class="gameover-title">System Crash</h1>
 
+        <!-- New high score banner -->
+        <div id="highScoreBanner" class="high-score-banner" style="display:none;">
+            🎉 NEW HIGH SCORE! 🎉
+        </div>
+
         <div class="currency-display">
+            <div class="currency-card points-card">
+                <span class="currency-icon">⚡</span>
+                <div class="currency-info">
+                    <span class="currency-label">POINTS</span>
+                    <span id="pointsEarned" class="currency-value">0</span>
+                </div>
+            </div>
             <div class="currency-card earned">
                 <span class="currency-icon">✦</span>
                 <div class="currency-info">
-                    <span class="currency-label">EARNED</span>
+                    <span class="currency-label">COINS</span>
                     <span id="earnedVal" class="currency-value">0</span>
                 </div>
             </div>
@@ -60,6 +81,12 @@
             </div>
         </div>
 
+        <!-- Full leaderboard on game over -->
+        <div id="gameOverLeaderboard" class="leaderboard-section">
+            <span class="leaderboard-title">🏆 Leaderboard</span>
+            <div id="gameOverLbList" class="leaderboard-list"></div>
+        </div>
+
         <div class="shop-section">
             <span class="shop-label">Aura Trails</span>
             <div id="trailShop" class="grid"></div>
@@ -68,7 +95,7 @@
             <div id="themeShop" class="grid"></div>
         </div>
 
-        <button class="btn" onclick="resetGame()">Reboot</button>
+        <button class="btn btn-ready" onclick="resetGame()">Reboot</button>
     </div>
 
     <!-- ═══════════════ CANVAS ═══════════════ -->

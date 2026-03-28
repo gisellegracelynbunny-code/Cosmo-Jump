@@ -9,7 +9,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Username must be at least 2 characters." });
     }
 
-    /* Normalize: lowercase, alphanumeric + underscores only */
     const key = `user:${username.toLowerCase().replace(/[^a-z0-9_]/g, "")}`;
 
     try {
@@ -19,16 +18,17 @@ export default async function handler(req, res) {
             return res.status(200).json({
                 isNew: false,
                 balance: Number(data.balance),
+                highScore: Number(data.highScore || 0),
                 theme: data.theme || "default",
                 trail: data.trail || "none"
             });
         }
 
-        /* New user — create with defaults */
-        await redis.hset(key, { balance: 0, theme: "default", trail: "none" });
+        await redis.hset(key, { balance: 0, highScore: 0, theme: "default", trail: "none" });
         return res.status(200).json({
             isNew: true,
             balance: 0,
+            highScore: 0,
             theme: "default",
             trail: "none"
         });
